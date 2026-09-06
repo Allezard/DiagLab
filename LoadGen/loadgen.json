@@ -1,0 +1,68 @@
+{
+  // Сценарии нагрузки для демо-стенда DiagLab.
+  //
+  // Файл ищется в текущем каталоге, затем рядом с программой; другой — ключом --config.
+  // Подстановки в path: {seq}, {run}, {rand:min:max}, {pick:a|b}, {guid}. Подробно — loadgen --help.
+  //
+  // У сценария может быть модель нагрузки по умолчанию:
+  //   "rps": N          — открытая модель, N запросов в секунду;
+  //   "concurrency": N  — закрытая модель, N клиентов.
+  // Ключи -c и --rps в командной строке всегда важнее.
+  //
+  // Почему у search, subscribe и sessions стоит rps: эти ручки отвечают за миллисекунды,
+  // и восемь клиентов без пауз выдают тысячи запросов в секунду. На такой частоте картина
+  // на счётчиках меняется быстрее, чем её успеваешь прочитать. 30–50 запросов в секунду
+  // дают изменения, которые удобно наблюдать минутами.
+
+  "baseUrl": "http://localhost:5199",
+  "healthCheck": "/api/health",
+  "startHint": "Запустите стенд из корня репозитория: dotnet run --project DiagLab",
+  "defaultScenario": "mixed",
+
+  "scenarios": {
+    "search": {
+      "description": "поиск по каталогу, каждый запрос с новой строкой поиска",
+      "path": "/api/catalog/search?q=q-{run}-{seq}",
+      "rps": 30
+    },
+    "export": {
+      "description": "бинарная выгрузка на 700–9000 строк (128 Б на строку)",
+      "path": "/api/reports/export?rows={rand:700:9000}"
+    },
+    "csv": {
+      "description": "выгрузка в CSV на 2000–20000 строк",
+      "path": "/api/reports/csv?rows={rand:2000:20000}"
+    },
+    "subscribe": {
+      "description": "подписка случайного пользователя на изменения цен",
+      "path": "/api/notifications/subscribe?user=u{rand:1:100000}",
+      "rps": 50
+    },
+    "rates": {
+      "description": "курс валюты из внешнего источника",
+      "path": "/api/rates?currency=EUR"
+    },
+    "ping": {
+      "description": "проверка доступности источника курсов",
+      "path": "/api/rates/ping"
+    },
+    "reserve": {
+      "description": "резервирование одного из 500 товаров",
+      "path": "/api/inventory/reserve?product={rand:1:500}&qty=1"
+    },
+    "sessions": {
+      "description": "открытие пользовательской сессии",
+      "path": "/api/sessions/open?user=u{rand:1:100000}",
+      "rps": 50
+    },
+    "health": {
+      "description": "проверка живости — почти пустой запрос",
+      "path": "/api/health"
+    },
+    "mixed": {
+      "description": "всё сразу, как в реальной эксплуатации (без ping и health)",
+      // Веса — доля запросов каждого вида. Выгрузок в CSV заказывают реже, чем ищут товары.
+      "mix": { "search": 4, "export": 4, "csv": 1, "subscribe": 4, "rates": 4, "reserve": 4, "sessions": 4 }
+    }
+  }
+}

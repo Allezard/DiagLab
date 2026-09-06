@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DiagLab/DiagLab.csproj" Id="f592df1f-593d-4d05-8d87-08a44180ab34" />
+  <Project Path="LoadGen/LoadGen.csproj" Id="22b43333-e89b-463d-80b9-a77bfbb3d757" />
+</Solution>
